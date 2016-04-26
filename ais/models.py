@@ -1,4 +1,5 @@
 import copy
+from flask.ext.sqlalchemy import BaseQuery
 from geoalchemy2.types import Geometry
 from ais import app, app_db as db
 from ais.util import *
@@ -136,8 +137,22 @@ ADDRESS_FIELDS = [
     'street_address',
 ]
 
+class AddressQuery(BaseQuery):
+    """A query class that knows how to sort addresses"""
+    def order_by_address(self):
+        return self.order_by(Address.street_name,
+                             Address.street_suffix,
+                             Address.street_predir,
+                             Address.street_postdir,
+                             Address.address_low,
+                             Address.address_high,
+                             Address.unit_num.nullsfirst())
+
+
 class Address(db.Model):
     """A street address with parsed components."""
+    query_class = AddressQuery
+
     id = db.Column(db.Integer, primary_key=True)
     street_address = db.Column(db.Text)
     address_low = db.Column(db.Integer)
